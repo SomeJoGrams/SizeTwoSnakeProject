@@ -80,6 +80,21 @@ class Facing {
     }
 }
 
+class Position{
+    constructor(xPosition, yPosition){
+        this.xPosition = xPosition;
+        this.yPosition = yPosition;
+    }
+    getX(){
+        return this.xPosition;
+    }
+    getY(){
+        return this.yPosition;
+    }
+
+}
+
+
 class Field{
     constructor(xIndex,yIndex,content,facing){
         this.xIndex = xIndex;
@@ -95,6 +110,9 @@ class Field{
     }
     getContent(){
         return this.content;
+    }
+    setContent(newContent){
+        this.content = newContent;
     }
     getFacing(){
         return this.direction;
@@ -117,19 +135,6 @@ class DrawnField extends Field{
     }
 }
 
-class Position{
-    constructor(xPosition, yPosition){
-        this.xPosition = xPosition;
-        this.yPosition = yPosition;
-    }
-    getX(){
-        return this.xPosition;
-    }
-    getY(){
-        return this.yPosition;
-    }
-
-}
 
 function onlyOneDifference(x , y){
     // smaller 
@@ -162,6 +167,7 @@ function relativePosition(position1,position2){ // return how the position 2 is 
     return null;
 }
 
+
 class Snake{
     constructor(size, xHeadPosition, yHeadPosition, facingDirection, snakeTail, updateFields){
         this.size = size;
@@ -183,12 +189,38 @@ class Snake{
         return curSnakeUpate;
     }
 
+    // findFreeTile(){
+    //     // let tailPosition = snakeTail[0];
+    //     // let tailFacing = relativePosition()
+    //     // for (let i = 0; i < 4; i++){ //check in every direction
+    //     //     let freeField = nextPosition(new Field(tailPosition.getX(), tailPosition.getY(),"0",this.tailFacing ); // grow in the position where the tail is facing
+    //     //     if ()
+    //     // }
+    //     // return null;
+    //    
+    // }
+
+    // increase the snake Size upon moving one tile forward, has to be called before the snake gets drawn and after moving
+    increaseSnakeSize(){
+        // find the tail that will be emptied
+        for (let i = 0; i < this.updateFields.length; i++){
+            if (this.updateFields[i].getContent() === "0"){
+                this.updateFields[i].setContent("1");
+                let newTailPosition = new Position(this.updateFields[i].getX(), this.updateFields[i].getY());
+                this.snakeTail.unshift(newTailPosition);
+                return true;
+            }
+        }
+        // remove the update Fields call from the Snake and re add to the snake tail
+        return false;
+    }
+
     getSnakeTail(){
         return this.snakeTail;
     }
 
     willCollide(snakeField){
-        let nextPosition = this.nextPosition(); // xPos
+        let nextPosition = this.nextPosition(new Field(this.xHeadPosition,this.yHeadPosition,"2",this.facingDirection)); // xPos
         if (snakeField[nextPosition.getX() + nextPosition.getY() * xFields].content === "0"){
             return false;
         }
@@ -200,8 +232,9 @@ class Snake{
     // down = 2
     // left 3
 
-    nextPosition(){
-        if (this.facingDirection.facingUp()) {
+    nextPosition(field){
+        let facingDirection = field.getFacing();
+        if (facingDirection.facingUp()) {
             // inside bounds
             if(this.yHeadPosition - 1 >= 0){
                 return new Position(this.xHeadPosition, this.yHeadPosition - 1);
@@ -210,7 +243,7 @@ class Snake{
                 return new Position(this.xHeadPosition, yFields - 1);
             }
         }
-        else if (this.facingDirection.facingDown()) {
+        else if (facingDirection.facingDown()) {
             // add to new head Position 
             if(this.yHeadPosition + 1 > yFields - 1){ // out of bounds
                 return new Position(this.xHeadPosition, 0);
@@ -219,7 +252,7 @@ class Snake{
                 return new Position(this.xHeadPosition, this.yHeadPosition + 1);
             }
         }
-        else if (this.facingDirection.facingRight()) {
+        else if (facingDirection.facingRight()) {
             if(this.xHeadPosition + 1 > xFields - 1){ // out of bounds
                 return new Position(0, this.yHeadPosition);
             }
@@ -248,12 +281,13 @@ class Snake{
 
     moveforward()
     {
+        console.log(this.updateFields);
         let oldTail = null;
         // check for apple
         if (this.snakeTail.length > 0){
             oldTail = this.snakeTail.shift();
         }
-        let nextPosition = this.nextPosition();
+        let nextPosition = this.nextPosition(new Field(this.xHeadPosition,this.yHeadPosition,"2",this.facingDirection));
         // let headFacing = nextPosition[1];
         this.snakeTail.push(nextPosition); // add the new head to the last Element of the snake
         // update the updateField
@@ -278,11 +312,11 @@ class Snake{
         this.yHeadPosition = this.snakeTail[this.snakeTail.length - 1].getY();
 
         this.updateFields.push(new Field(this.xHeadPosition, this.yHeadPosition, "2", facing)); // fix facing
+        // return the new Head Position
+        return new Position(this.xHeadPosition, this.yHeadPosition);
     }
 
 }
-
-
 
 function linearInterpolation(currentValue,stepSize,goalValue){
     if (currentValue >= goalValue){
@@ -296,7 +330,6 @@ function interpolateField(drawnField,stepSize,interpolationFunc){
     resultField.setCompleted(interpolationFunc(drawnField.getCompleted(),stepSize,1));
     return resultField;
 }
-
 
 currentAnimatedFields = [];
 function interpolatedSnakeDrawing(fieldInterPolationFunc,animationStep,animate){
@@ -319,10 +352,10 @@ function interpolatedSnakeDrawing(fieldInterPolationFunc,animationStep,animate){
         else if(drawnField.getContent() === "2"){ // case head
             canvCont.fillStyle = "black";    
         }
-        if (drawnField.getFacing().facingUp()){
+        if (drawnField.getFacing().facingUp()){ // TODO FIX
             // set upper left corner, so that y coord is at current Progress
             // set height of the rectangle to the current Progress
-            editedyPos = editedyPos - squareSize + (squareSize * (1 - curAnimationProgress));
+            editedyPos = editedyPos + (squareSize * (1 - curAnimationProgress));
             heightToDraw = squareSize * curAnimationProgress;
         }
         else if (drawnField.getFacing().facingDown()){
@@ -421,7 +454,7 @@ let elapsedTime = 0; // time in seconds
 const animationStep = 0.05; // if this is too small the game cant keep up with the fps // TODO make fps dependend on the animationStep? what if the fps wouldnt get met
 
 
-let mySnake = new Snake(4, 0, 0, new Facing("down"), [], []);
+let mySnake = new Snake(10, 0, 0, new Facing("up"), [], []);
 
 let snakeField = [];
 for (let i = 0; i < xFields; i++){
@@ -451,7 +484,10 @@ function run(){
         fpsThreshold -= 1.0 / fps;
         if ((elapsedTime) > fixedTimeStep){
             elapsedTime = 0;
-            mySnake.moveforward();
+            let headPosition = mySnake.moveforward();
+            if(snakeField[headPosition.getX() + headPosition.getY() * xFields].getContent() === "apple"){
+                mySnake.increaseSnakeSize();
+            }
             interpolatedSnakeDrawing(interpolateField,animationStep,false); // finish the Snake if the it didnt get completed during the animation
             currentAnimatedFields = [];
         }
