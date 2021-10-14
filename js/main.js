@@ -95,18 +95,12 @@ class Position{
 }
 
 
-class Field{
+class Field extends Position{
     constructor(xIndex,yIndex,content,facing){
-        this.xIndex = xIndex;
-        this.yIndex = yIndex;
+        super(xIndex, yIndex)//this.xIndex = xIndex;
+        //this.yIndex = yIndex;
         this.content = content;
         this.direction = facing;// direction in that its going to be drawn / relative to the snake
-    }
-    getX(){
-        return this.xIndex;
-    }
-    getY(){
-        return this.yIndex;
     }
     getContent(){
         return this.content;
@@ -203,6 +197,7 @@ class Snake{
     // increase the snake Size upon moving one tile forward, has to be called before the snake gets drawn and after moving
     increaseSnakeSize(){
         // find the tail that will be emptied
+        this.size = this.size + 1;
         for (let i = 0; i < this.updateFields.length; i++){
             if (this.updateFields[i].getContent() === "0"){
                 this.updateFields[i].setContent("1");
@@ -281,7 +276,6 @@ class Snake{
 
     moveforward()
     {
-        console.log(this.updateFields);
         let oldTail = null;
         // check for apple
         if (this.snakeTail.length > 0){
@@ -332,7 +326,7 @@ function interpolateField(drawnField,stepSize,interpolationFunc){
 }
 
 currentAnimatedFields = [];
-function interpolatedSnakeDrawing(fieldInterPolationFunc,animationStep,animate){
+function animateFields(fieldInterPolationFunc,animationStep,animate){
     for (let i = 0; i < currentAnimatedFields.length; i++){
         let widthToDraw = squareSize;
         let heightToDraw = squareSize;
@@ -409,6 +403,19 @@ function updateSnake(snakeField, snake){
     }
 }
 
+let freeFields = xFields*yFields; // TODO FIX
+function spawnApple(xPosition, yPosition){
+    let applexPosition = xPosition;
+    let appleyPosition = yPosition;
+    if (xPosition == null && yPosition == null){
+        applexPosition = Math.round(Math.random() * (xFields - 1));
+        appleyPosition = Math.round(Math.random() * (yFields - 1));
+    }
+    if (freeFields > 0){
+        snakeField[applexPosition + appleyPosition * xFields].setContent("apple");
+    }
+}
+
 
 // DFS to find a valid way 
 function shortestWayToPosition(field, startPosition, goalPosition){
@@ -443,7 +450,7 @@ function drawCanvas(snakeField, snake) {
         }
     }
     updateSnake(snakeField, snake);
-    interpolatedSnakeDrawing(interpolateField, 1, false);
+    animateFields(interpolateField, 1, false);
 }
 
 let fps = 60;
@@ -465,11 +472,14 @@ for (let i = 0; i < xFields; i++){
 
 
 drawCanvas(snakeField,mySnake);
+console.log(mySnake.size)
+spawnApple(0,yFields-1);
+console.log(mySnake.size)
 
 function run(){
     window.requestAnimationFrame(run);
     if (gamePaused){
-        interpolatedSnakeDrawing(interpolateField, animationStep, false); // finish the drawing of the snake insantly
+        animateFields(interpolateField, animationStep, false); // finish the drawing of the snake insantly
         return;
     }
     let now = performance.now() / 1000;
@@ -485,17 +495,19 @@ function run(){
         if ((elapsedTime) > fixedTimeStep){
             elapsedTime = 0;
             let headPosition = mySnake.moveforward();
+            console.log(headPosition);
             if(snakeField[headPosition.getX() + headPosition.getY() * xFields].getContent() === "apple"){
+                snakeField[headPosition.getX() + headPosition.getY() * xFields].setContent("0");
                 mySnake.increaseSnakeSize();
             }
-            interpolatedSnakeDrawing(interpolateField,animationStep,false); // finish the Snake if the it didnt get completed during the animation
+            animateFields(interpolateField,animationStep,false); // finish the Snake if the it didnt get completed during the animation
             currentAnimatedFields = [];
         }
         updateSnake(snakeField, mySnake);
         // only call the animation every step size of the animation to prevent a stuttering snake
         // if (elapsedTime * animationStep >= animationTimeElapsed) { // one animationStep length of time has elapsed
         //     animationTimeElapsed = 0;
-        interpolatedSnakeDrawing(interpolateField,animationStep,true);
+        animateFields(interpolateField,animationStep,true);
         // }
     }
 }
