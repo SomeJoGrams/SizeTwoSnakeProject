@@ -1,7 +1,7 @@
 
 let gamePaused = false;
 
-let button = document.getElementById("pauseButton");
+const button = document.getElementById("pauseButton");
 button.addEventListener("click",pauseToggle);
 
 const canvas = document.getElementById("snakeSpace");
