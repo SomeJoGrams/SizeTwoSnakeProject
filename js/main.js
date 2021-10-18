@@ -5,9 +5,29 @@ const button = document.getElementById("pauseButton");
 button.addEventListener("click",pauseToggle);
 
 const canvas = document.getElementById("snakeSpace");
+let canvCont = canvas.getContext("2d");
+
+const appleImage = document.createElement("img");
+appleImage.src = "img/apple.png";
+
 const canvasxSize = canvas.clientWidth;
 const canvasySize = canvas.clientHeight;
 const ratio = (canvas.clientHeight > canvas.clientWidth) ? canvas.clientWidth / canvas.clientHeight : canvas.clientHeight / canvas.clientWidth;
+
+
+const gradientObj = canvCont.createLinearGradient(0,0,canvas.clientWidth/2,0);
+gradientObj.addColorStop(0,"black");
+gradientObj.addColorStop(1,"red");
+
+const gameColors =  {
+    backgroundColor:"white",
+    snakeHeadColor:"orange",
+    snakeTailColor: gradientObj,//"red",
+    boardColor:"black",
+    strokeColor:"red",
+    textColor:"black",
+    textFont: "30px Verdana"
+}
 
 
 // function euclideanGCD(a,b){
@@ -36,13 +56,8 @@ else {
 
 let freeFields = xFields * yFields;
 
-let canvCont = canvas.getContext("2d");
-
 let squareSize = (canvasxSize-200) / (xFields);//(canvasxSize > canvasySize) ? canvasxSize / xFields : canvasySize / yFields; // why do i need this offset?
 squareSize = Math.round(squareSize);
-
-const appleImage = document.createElement("img");
-appleImage.src = "img/apple.png";
 
 function pauseToggle(){
     gamePaused = !gamePaused;
@@ -430,13 +445,13 @@ function animateFields(animatedFields,fieldInterpolationFunc,animationStep,anima
         let editedyPos = curyPos; // * 0.5;
         canvCont.beginPath();
         if (drawnField.getContent() === "tail"){ // case tail
-            canvCont.fillStyle = "red";    
+            canvCont.fillStyle = gameColors.snakeTailColor;    
         }
         else if(drawnField.getContent() === "empty"){ // case empty
-            canvCont.fillStyle = "white";    
+            canvCont.fillStyle = gameColors.backgroundColor;    
         }
         else if(drawnField.getContent() === "head"){ // case head
-            canvCont.fillStyle = "black";    
+            canvCont.fillStyle = gameColors.snakeHeadColor;
         }
         else if (drawnField.getContent() === "apple"){
             // spawn apple and skip
@@ -480,6 +495,8 @@ function animateFields(animatedFields,fieldInterpolationFunc,animationStep,anima
         canvCont.stroke();
         // always redraw the border
         canvCont.beginPath();
+        // todo maybe add as color depending on the current Element
+        canvCont.strokeStyle = gameColors.strokeColor;
         canvCont.rect(curxPos,curyPos,squareSize,squareSize);
         canvCont.stroke();
     }
@@ -550,7 +567,7 @@ function createFacing(i){
 
 }
 
-// BFS to find a valid way 
+// TODO BFS to find a valid way 
 function wayToPosition(snake, goalPosition){
     let copiedField = snakeField.slice();
     let copiedSnakeTail = snake.getSnakeTail().slice();
@@ -609,7 +626,9 @@ function debugCanvas(paintOver){
             }
             else {
                 let fillString = String(i) + " " + String(j);
-                canvCont.fillText(fillString,curxPos,curyPos + squareSize, squareSize * 5);
+                canvCont.fillStyle = gameColors.textColor;
+                canvCont.fillTest = gameColors.textFont;
+                canvCont.fillText(fillString,curxPos,curyPos + squareSize, squareSize);
             }
         }
     }
@@ -624,9 +643,10 @@ function drawCanvas() {
             if (snakeField[i + j * xFields].content === "empty"){
                 curxPos = (i) * squareSize;
                 curyPos = (j) * squareSize;
-                canvCont.fillStyle = "white";    
+                canvCont.fillStyle = gameColors.backgroundColor;    
                 canvCont.fillRect(curxPos, curyPos, squareSize,squareSize);
                 canvCont.beginPath();
+                canvCont.strokeStyle = gameColors.strokeColor;
                 canvCont.rect(curxPos,curyPos,squareSize,squareSize);
                 canvCont.stroke();
             }
