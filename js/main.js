@@ -4,6 +4,14 @@ let gamePaused = false;
 const button = document.getElementById("pauseButton");
 button.addEventListener("click",pauseToggle);
 
+const createCookieButton = document.getElementById("cookieCreateButton");
+createCookieButton.addEventListener("click", createSnakeCookie);
+const deleteCookieButton = document.getElementById("cookieDeleteButton");
+deleteCookieButton.addEventListener("click", deleteSnakeCookie);
+const loadCookieButton = document.getElementById("cookieLoadButton");
+loadCookieButton.addEventListener("click", loadSnakeCookie);
+
+
 const canvas = document.getElementById("snakeSpace");
 let canvCont = canvas.getContext("2d");
 
@@ -58,6 +66,9 @@ let freeFields = xFields * yFields;
 
 let squareSize = (canvasxSize-200) / (xFields);//(canvasxSize > canvasySize) ? canvasxSize / xFields : canvasySize / yFields; // why do i need this offset?
 squareSize = Math.round(squareSize);
+
+
+
 
 function pauseToggle(){
     gamePaused = !gamePaused;
@@ -121,6 +132,19 @@ class Facing {
             default:
                 return "left";  
         }
+    }
+}
+
+function intDirectionToString(int){ // facing obj method, so I dont have to change the other code using Facing.directionString()
+    switch(int){
+        case 0:
+            return "up";
+        case 1:
+            return "right";
+        case 2:
+            return "down";
+        default:
+            return "left";  
     }
 }
 
@@ -211,15 +235,26 @@ class Snake{
         this.xHeadPosition = xHeadPosition;
         this.yHeadPosition = yHeadPosition;
         this.facingDirection = facingDirection;
-        this.snakeTail = snakeTail;
         this.updateFields = updateFields;
-        this.gameOver = false;
-        for (let i = size - 1; i >= 0; i--){
-            snakeTail.push(new Position(xHeadPosition + i, yHeadPosition)); // the highest Index has the head and lowest have the following tail pieces 
-            this.updateFields.push(new Field(xHeadPosition + i, yHeadPosition, "tail",facingDirection));        
-            // update global free fields
-            freeFields = freeFields-1
+        if (snakeTail.length === 0){
+            this.snakeTail = [];
+            for (let i = size - 1; i >= 0; i--){
+                this.snakeTail.push(new Position(xHeadPosition + i, yHeadPosition)); // the highest Index has the head and lowest have the following tail pieces 
+                this.updateFields.push(new Field(xHeadPosition + i, yHeadPosition, "tail",facingDirection));        
+                // update global free fields
+                freeFields = freeFields-1
+            }
         }
+        else {
+            this.snakeTail = snakeTail;
+            for (let i = 0; i < this.snakeTail.length; i++){
+                this.updateFields.push(new Field(this.snakeTail[i].getX(),this.snakeTail[i].getY(), "tail", facingDirection)) // TODO safe snakes as Fields
+            }
+            freeFields = freeFields - snakeTail.length // TODO on deleting Snake/losing Snake update freeFields
+        }
+        this.gameOver = false;
+        
+        //
         this.isAnimated = animated;
         this.updateFields[this.updateFields.length - 1].content = "head";
     }
@@ -387,9 +422,9 @@ class Snake{
                                             this.snakeTail.map((curVal) => new Field(curVal.getX(), curVal.getY(), "empty", new Facing("up"))));
         if (headPosition != null){ // fix for getting called twice
             // filtering hit position
-            console.log(this.updateFields);
+            // console.log(this.updateFields);
             this.updateFields = this.updateFields.filter((curField) => !(curField.getX() === headPosition.getX() && curField.getY() === headPosition.getY())) // remove the collided head piece from the pieces to that have to be drawn
-            console.log(this.updateFields);
+            // console.log(this.updateFields);
 
         }
         this.snakeTail = [];
@@ -704,6 +739,117 @@ function run(){
     }
 }
 
+function readCookie(cookieName){
+    let splitSiteCookie = document.cookie.split(";");
+    for(let i = 0; i < splitSiteCookie.length; i++){
+        let currentCookie = splitSiteCookie[i];
+        while(currentCookie.charAt(0) == ' '){ // remove preceding whitespaces
+            currentCookie = currentCookie.substring(1);
+        }
+        if (currentCookie.indexOf(cookieName) == 0){
+            return currentCookie.substring(cookieName.length, currentCookie.length);
+        }
+    }
+    return "";
+}
+
+const cookieName = "SnakeCookie"
+function createSnakeCookie(){
+    // split snakes with . symbol
+    let snakesString = ""
+    for (let i = 0; i < snakeArray.length;i++){
+        console.log(snakeArray[i]);
+        snakesString = snakesString + encodeSnake(snakeArray[i]) + ".";
+    }
+    createCookie(cookieName,snakesString,2,"","");
+}
+
+function encodeSnake(snake){
+    let jsonSnake = JSON.stringify(snake);
+    let encodedSnake = btoa(jsonSnake); // bring to base 64 encoding, this only handles UTF8 but should be fine for snake objects (no escaping needed)
+    return encodedSnake;
+}
+
+function decodeSnake(b64Snake){
+    let decodedSnake = atob(b64Snake);
+    let jsonObj = (JSON.parse(decodedSnake));
+    let positions = jsonObj.snakeTail.map((genericObj) => new Position(genericObj.xPosition, genericObj.yPosition));
+    let snakeObj = new Snake(jsonObj.size,jsonObj.xHeadPosition, jsonObj.yHeadPosition,new Facing(intDirectionToString(jsonObj.facingDirection.direction)),positions, [],jsonObj.isAnimated);
+    return snakeObj;
+}
+
+
+function deleteSnakeCookie(){
+    deleteCookie(cookieName,"");
+}
+
+function loadSnakeCookie(){
+    //if cookie is set load content and clear currentSnakes
+    let splitSiteCookie = document.cookie.split(";");
+    let resultSnakes = [];
+    for(let i = 0; i < splitSiteCookie.length; i++){
+        let currentCookie = splitSiteCookie[i];
+        while(currentCookie.charAt(0) == ' '){ // remove preceding whitespaces
+            currentCookie = currentCookie.substring(1);
+        }
+        if (currentCookie.indexOf(cookieName) == 0){ // found the searched Cookie
+            // remove the cookie name from the start of the string
+            currentCookie = currentCookie.substring(cookieName.length + 1)  // + 1 to remove the following "=" sign
+            // split the cookie with (.)
+            let encodedSnakes = currentCookie.split(".");
+            for (let i = 0; i < encodedSnakes.length; i++){
+                if (encodedSnakes[i].length > 0){
+                    resultSnakes.push(decodeSnake(encodedSnakes[i]));
+                }
+            }
+            break;
+        }
+    }
+    if (resultSnakes.length > 0){
+        for (let i = 0; i <snakeArray.length; i++){
+            snakeArray[i].setSnakeGameOverState();
+            updateSnake(snakeField,snakeArray[i]);
+        }
+        snakeArray = [];
+        // empty all current animated fields and redraw
+        animateFields(currentAnimatedFields,interpolateField,animationStep,false);
+        currentAnimatedFields = [];
+        for (let newSnake of resultSnakes){
+            addSnake(newSnake);
+            animateFields(newSnake.updateFields,interpolateField,animationStep,false);
+        }
+    }
+}
+
+function deleteCookie(cookieName,domain){
+    let splitSiteCookie = document.cookie.split(";");
+    let resultCookie = "";
+    for(let i = 0; i < splitSiteCookie.length; i++){
+        let currentCookie = splitSiteCookie[i];
+        while(currentCookie.charAt(0) == ' '){ // remove preceding whitespaces
+            currentCookie = currentCookie.substring(1);
+        }
+        if (currentCookie.indexOf(cookieName) == 0){ // found the searched Cookie
+            let curDomain = (domain === "" ? "":"Domain=" + domain +";");
+            currentCookie = cookieName + "=;" + "Path=/;" + curDomain + "Expires=Thu, 01 Jan 1970 00:00:01 GMT;" + "Max-Age=-9999999999999;";
+        }
+        resultCookie = resultCookie + currentCookie;
+    }
+    // console.log(resultCookie);
+    document.cookie = resultCookie;
+}
+
+function createCookie(cookieName,cookieValue,cookieExpiringDay,domain, path){
+    const d = new Date();
+    d.setTime(d.getTime() + (cookieExpiringDay * 24 * 60 * 60 * 1000));
+    const expires = "expires="+d.toUTCString();
+    let curDomain = (domain === "" ? "":"Domain=" + domain + ";");
+    let resultCookie = cookieName+"="+cookieValue+";"+expires+";"+ curDomain + "Path=/"+ path + ";"; // return the created cookie
+    // console.log(resultCookie);
+    document.cookie = resultCookie;
+}
+
+
 let fps = 60;
 let fpsThreshold = 0;
 let last = performance.now() / 1000;
@@ -716,7 +862,11 @@ const currentInterpolation = linearInterpolation;
 
 let snakeField = []; // stores the Field where the snake can move
 let currentAnimatedFields = [];
+// search cookies for snake as JSON
+
 let mySnake = new Snake(10, 0, 0, new Facing("up"), [], [] , true);
+// document.cookie
+// console.log(JSON.stringify(mySnake));
 let snakeArray = [mySnake]; // stores the snakes on the field
 
 
