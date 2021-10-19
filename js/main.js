@@ -11,6 +11,16 @@ deleteCookieButton.addEventListener("click", deleteSnakeCookie);
 const loadCookieButton = document.getElementById("cookieLoadButton");
 loadCookieButton.addEventListener("click", loadSnakeCookie);
 
+function cookieButtonToggle(){ //only show the cooke delete and load buttons if cookies exist
+if (document.cookie.length > 0){
+    deleteCookieButton.style.display = "";
+    loadCookieButton.style.display = "";
+}
+else{
+    deleteCookieButton.style.display = "none";
+    loadCookieButton.style.display = "none";
+}
+}
 
 const canvas = document.getElementById("snakeSpace");
 let canvCont = canvas.getContext("2d");
@@ -762,6 +772,7 @@ function createSnakeCookie(){
         snakesString = snakesString + encodeSnake(snakeArray[i]) + ".";
     }
     createCookie(cookieName,snakesString,2,"","");
+    cookieButtonToggle();
 }
 
 function encodeSnake(snake){
@@ -781,6 +792,7 @@ function decodeSnake(b64Snake){
 
 function deleteSnakeCookie(){
     deleteCookie(cookieName,"");
+    cookieButtonToggle();
 }
 
 function loadSnakeCookie(){
@@ -837,6 +849,7 @@ function deleteCookie(cookieName,domain){
     }
     // console.log(resultCookie);
     document.cookie = resultCookie;
+    
 }
 
 function createCookie(cookieName,cookieValue,cookieExpiringDay,domain, path){
@@ -862,10 +875,8 @@ const currentInterpolation = linearInterpolation;
 
 let snakeField = []; // stores the Field where the snake can move
 let currentAnimatedFields = [];
-// search cookies for snake as JSON
 
 let mySnake = new Snake(10, 0, 0, new Facing("up"), [], [] , true);
-// document.cookie
 // console.log(JSON.stringify(mySnake));
 let snakeArray = [mySnake]; // stores the snakes on the field
 
