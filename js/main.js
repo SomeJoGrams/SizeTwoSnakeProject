@@ -21,16 +21,12 @@ else{
     loadCookieButton.style.display = "none";
 }
 }
-
+cookieButtonToggle();
 const canvas = document.getElementById("snakeSpace");
 let canvCont = canvas.getContext("2d");
 
 const appleImage = document.createElement("img");
 appleImage.src = "img/apple.png";
-
-const canvasxSize = canvas.clientWidth;
-const canvasySize = canvas.clientHeight;
-const ratio = (canvas.clientHeight > canvas.clientWidth) ? canvas.clientWidth / canvas.clientHeight : canvas.clientHeight / canvas.clientWidth;
 
 
 const gradientObj = canvCont.createLinearGradient(0,0,canvas.clientWidth/2,0);
@@ -38,7 +34,9 @@ gradientObj.addColorStop(0,"black");
 gradientObj.addColorStop(1,"red");
 
 const gameColors =  {
-    backgroundColor:"white",
+    // backgroundColor:"white", // 
+    backgroundColor:"white", // get snake canvas css background
+    
     snakeHeadColor:"orange",
     snakeTailColor: gradientObj,//"red",
     boardColor:"black",
@@ -46,6 +44,45 @@ const gameColors =  {
     textColor:"black",
     textFont: "30px Verdana"
 }
+
+const curFields = 25;
+const ratio = (canvas.clientHeight > canvas.clientWidth) ? (canvas.clientWidth / canvas.clientHeight) : (canvas.clientHeight / canvas.clientWidth);
+const standardCount = Math.round(curFields * (ratio)); // determine the square Count on start
+
+// canvas will resize on different screen sizes
+let canvasxSize = canvas.clientWidth;
+let canvasySize = canvas.clientHeight;
+
+let xFields = 0;
+let yFields = 0;
+let smallerSize = 0;
+if (canvasxSize > canvasySize){
+    xFields = curFields;//10
+    yFields = standardCount;
+    smallerSize = canvasySize;
+}
+else {
+    xFields = standardCount;
+    yFields = curFields;//10
+    smallerSize = canvasxSize;
+
+}
+let freeFields = xFields * yFields;
+let squareSize = Math.round((smallerSize) / (standardCount));
+
+
+function calcSquareSizeDependingOnCanvas(canvas){
+    if (canvas.width !== canvasxSize){
+        canvasxSize = canvas.width;
+    }
+    if (canvas.height !== canvasySize){
+        canvasySize = canvas.height;
+    }
+    smallerSize = (canvasxSize > canvasySize ? canvasySize : canvasxSize);
+    // recalculate the saure Sizes and round them
+    squareSize = Math.round((smallerSize) / (standardCount));
+}
+
 
 
 // function euclideanGCD(a,b){
@@ -58,31 +95,10 @@ const gameColors =  {
 // const greastestCommonDivisor = euclideanGCD(canvas.clientHeight, canvas.clientWidth);
 // let xFields = canvas.clientWidth / greastestCommonDivisor;//10
 // let yFields = canvas.clientHeight / greastestCommonDivisor;
-const curFields = 25
-const standardCount = Math.round(curFields * (ratio));
-let xFields = 0;
-let yFields = 0;
-if (canvasxSize > canvasySize){
-    xFields = curFields;//10
-    yFields = standardCount;
-}
-else {
-    xFields = standardCount;
-    yFields = curFields;//10
-}
-
-
-let freeFields = xFields * yFields;
-
-let squareSize = (canvasxSize-200) / (xFields);//(canvasxSize > canvasySize) ? canvasxSize / xFields : canvasySize / yFields; // why do i need this offset?
-squareSize = Math.round(squareSize);
 
 
 
 
-function pauseToggle(){
-    gamePaused = !gamePaused;
-}
 
 // up = 0
 // right = 1
@@ -708,6 +724,11 @@ function addSnake(snake){
     animateFields(newSnakeAnimateFields,interpolateField, animationStep, false);
 }
 
+function pauseToggle(){
+    gamePaused = !gamePaused;
+}
+
+
 function run(){
     window.requestAnimationFrame(run);
     if (gamePaused){
@@ -892,8 +913,17 @@ drawCanvas();
 snakeField = updateSnake(snakeField,mySnake);
 animateFields(currentAnimatedFields,interpolateField, 1, false);
 
+
+window.onresize = function(){
+    calcSquareSizeDependingOnCanvas(canvas);
+    drawCanvas();
+}
+
+
 window.onload = function() {
     window.requestAnimationFrame(run);
+    calcSquareSizeDependingOnCanvas(canvas);
+    drawCanvas();
     };  
 
 // Program Idee 
@@ -906,7 +936,7 @@ window.onload = function() {
 // fixed Speed?
 
 // neuste Ideen Zeichen Geschwindigkeit unabhängig von FPS machen
-// Tiefensuche für späteres automatisches bewegen zum Mauscursor hmm wie das implementieren?
+// Tiefensuche für späteres automatisches bewegen zum Mauscursor?
 // Animation des vorwärtsbewegens -> animations Kette 
 // anhalten der Schlange mit Knopf
 
