@@ -1,0 +1,284 @@
+
+body {
+    background-color: rgb(96, 122, 183);
+    /* overflow lässt die scroll bar verschwinden */
+    /* overflow-y:hidden; */
+    counter-reset: listElement;
+
+}
+div{
+    display:grid;
+}
+
+
+/* @keyframes rotateObj{
+    from{rotate:0deg;}
+    to{rotate:360deg;}
+} */
+
+#snakeSpace{
+    /* width: 1800px;
+    height: 1080px; */
+    /*margin: 5px 5px 5px 5px; /* erstellt den Platz um das Element außen herum*/
+    /* block streckt auf gesamte Seite mit margin auto kombiniert landet das elemetn so in der Mitte */
+    display:block; 
+    margin:auto;
+    /* margin: 0; erstellt den Platz um das Element außen herum */
+    border: 5px solid gray;
+    
+    /* geht noch mal um das element herum außerhalb von padiing/margin/border*/
+    outline-style: double;
+    outline-color:orange;
+    align-self: center;
+    /* padding: 5% 5px 5px 5%; 
+    /* top right left bottom */
+    max-width: 80%;
+    max-height: 80%;
+    width: inherit;
+    height: inherit;
+    background-image: url("apple.png");
+    /* 2D transformationen */
+    animation-name: rotateObj;
+    animation-duration: 60s;
+    animation-direction:forwards;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+button{
+    /* text farbe */
+    color:tomato;
+    border:2px solid Tomato; /* Rahmen um Knöpfe*/
+    border-radius: 5px;
+    background-color: rgb(255,250,0); 
+    /* text-decoration: underline; */
+    /* background-color: hsla();
+    background-color: hsl();
+    background-color: rgba(); */
+    /* background-color: #FFFFFF(); */
+    /* wenn font nicht gefunnden wird ghet Browser weiter in Reihe */
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; 
+
+}
+#cookieCreateButton{
+    text-align: right;
+    text-transform:uppercase;
+    /* text-shadow:0 0 1px black; */
+    /* oder auch 2 Schatten möglich */
+    /* text-shadow: h-shadow v-shadow blur-radius color|none|initial|inherit; */
+    text-shadow:0 0 5px green,0 1px 2px blue;
+}
+#cookieCreateButton:hover{
+    color:blueviolet;
+    background-color: blueviolet;
+}
+#cookieDeleteButton{
+    text-transform:lowercase;
+    font-style:italic;
+    /* transform: rotateY(30deg); */
+    width: 100px;
+    /* damit die transformation funktioniert muss diese auch vorher schon definiert sein */
+    /* transition-property: width,background-color; */
+    
+    /* transition-duration: width 2s; */
+    /* transform multiple values with different lengths */
+    transition: width 2s, background-color 5s;
+    /* transition-timing-function: linear; */
+    transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+    transition-delay: .5s;
+    background-color: rgb(255,0,0);
+}
+
+#cookieDeleteButton:hover{
+    width: 300px;
+    background-color: rgb(0,0,0);
+    /* transform: rotateX(60deg); */
+}
+
+@keyframes violetToLBlueAnim{
+    from {background-color: blueviolet;}
+    to {background-color: lightblue;}
+}
+
+#pauseButton{
+/* for testing animations with keyframes     */
+    animation-name:violetToLBlueAnim;
+    animation-duration:2s;
+    animation-iteration-count: infinite;
+    /* to play the animations forward than backward */
+    animation-direction:alternate;
+    animation-timing-function: ease-in-out;
+    /* fill mode keeps the style values from keyframes */
+    animation-fill-mode:forwards;
+}
+
+
+
+#cookieLoadButton{
+    font-weight:bold;
+    letter-spacing: 10px;
+    /* line-height:3px; */
+    /* wird damit weiter in Zeile geschrieben werden*/
+    /* white-space:nowrap; */
+    /* transform: translate(50px, 0px); */
+    /* transform: rotate(20deg);
+    transform: scale(1.1, 1.2); */
+}
+#cookieLoadButton:hover{
+    color:black;
+    background-color: blueviolet;
+    /* transform: rotate(20deg); */
+}
+
+a{
+    color:aliceblue;
+}
+a:hover{
+    color:red;
+}
+a:active{
+    text-decoration: unset;
+}
+/* #itemList{
+} */
+li::before{
+    counter-increment: listElement;
+    content: "Counter " counter(listElement) "; ";
+}
+/* ul.a{
+    list-style-type: square;
+}
+ul.a{
+    list-style-type: lower-alpha;
+} */
+/* ul{
+    list-style-image:url("../img/apple.png");
+} */
+table{
+    /* background-image: linear-gradient(45deg,red,yellow); */
+    /* radial gradient geht von innen nach außen*/
+
+    /* background-image: radial-gradient(red,yellow);  */
+    /* background-image: repeating-radial-gradient(red,yellow 3%, blue 2%);  */
+    /* background-image: conic-gradient(red,yellow 45deg,green); */
+    /* mit definiertem Zentrum */
+    /* background-image: conic-gradient(at 30% 30%,yellow 45deg,green); */
+    background-image: repeating-conic-gradient(yellow 33%,green 10%);
+    width: 30%;
+    text-align: left;
+}
+#NameTable{
+    /* macht dass das Element mit scrollt */
+    /* position:fixed; */
+    display: block;
+}
+#Name{
+    color:red;
+    /* element verändert immernoch das layout */
+    visibility: hidden;
+}
+#Name:hover{
+    color:blue;
+}
+#dropBarMenu{
+    position: relative;
+    display: inline-block;
+}
+#dropBarContent{
+    display:none;
+    position:absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    padding: 12px 16px;
+    z-index: 1;
+}
+
+/* #dropBarMenu:hover #dropBarContent { */
+#dropBarMenu:hover > div{
+    display: block;
+    border-radius: 3px;
+  }
+
+
+.tooltip{
+    position: relative;
+    visibility: visible;
+    display: block;
+    resize: horizontal;
+    overflow:auto;
+}
+.tooltip .tooltiptext{
+    visibility: hidden;
+    width: 30px;
+    background-color: black;
+    color: #fff;
+    padding: 5px 0;
+    border-radius: 6px;
+    /* Position the tooltip text - see examples below! */
+    position: absolute;
+    z-index: 1;
+    /* // align right -> doenst work */
+    /* top: -5px;
+    left: 105%; */
+    /* align left */
+    /* top: -5px;
+    right: 105%; */
+    /* top */
+    /* width: 120px;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -60px; Use half of the width (120/2 = 60), to center the tooltip */
+    /* bottom */
+    width: 120px;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
+}
+.tooltip:hover .tooltiptext{
+    visibility: visible;
+}
+
+/* arrow under the tool tip */
+/* .tooltip .tooltiptext::after {
+    content: " ";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: black transparent transparent transparent;
+  } */
+/*  right arrow */
+  /* .tooltip .tooltiptext::after {
+    content: " ";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent transparent black;
+  } */
+/* left arrow */
+/* .tooltip .tooltiptext::after {
+    content: " ";
+    position: absolute;
+    top: 50%;
+    right: 100%; 
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent black transparent transparent;
+  } */
+  /* top arrow */
+  .tooltip .tooltiptext::after {
+    content: " ";
+    position: absolute;
+    bottom: 100%;  /* At the top of the tooltip */
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent black transparent;
+  }

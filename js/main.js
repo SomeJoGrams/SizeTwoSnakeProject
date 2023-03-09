@@ -403,7 +403,6 @@ class Snake{
             return null;
         }
         let oldTail = null;
-        // check for apple
         if (this.snakeTail.length > 0){
             oldTail = this.snakeTail.shift();
         }
@@ -436,9 +435,6 @@ class Snake{
     }
 
     setSnakeGameOverState(){
-        // this.facingDirection = null;
-        // this.xHeadPosition = -1;
-        // this.yHeadPosition = -1;
         console.log(this.updateFields);
         let headPosition = this.updateFields.filter((curField) => (curField.getContent() == "head"))
                                             .map((headPosition) => new Position(headPosition.getX(), headPosition.getY()))[0];
@@ -448,10 +444,10 @@ class Snake{
                                             this.snakeTail.map((curVal) => new Field(curVal.getX(), curVal.getY(), "empty", new Facing("up"))));
         if (headPosition != null){ // fix for getting called twice
             // filtering hit position
-            // console.log(this.updateFields);
-            this.updateFields = this.updateFields.filter((curField) => !(curField.getX() === headPosition.getX() && curField.getY() === headPosition.getY())) // remove the collided head piece from the pieces to that have to be drawn
-            // console.log(this.updateFields);
+            // remove the collided head piece from the pieces that have to be drawn if its not from the same snake
 
+            this.updateFields = this.updateFields.filter((curField) => !(curField.getX() === headPosition.getX() && curField.getY() === headPosition.getY()));
+                                                                                                                                                                            
         }
         this.snakeTail = [];
         this.gameOver = true;
@@ -505,6 +501,7 @@ function animateFields(animatedFields,fieldInterpolationFunc,animationStep,anima
         let editedxPos = curxPos; //* 0.5;
         let editedyPos = curyPos; // * 0.5;
         canvCont.beginPath();
+
         if (drawnField.getContent() === "tail"){ // case tail
             canvCont.fillStyle = gameColors.snakeTailColor;    
         }
@@ -516,6 +513,15 @@ function animateFields(animatedFields,fieldInterpolationFunc,animationStep,anima
         }
         else if (drawnField.getContent() === "apple"){
             // spawn apple and skip
+            canvCont.fillStyle = gameColors.backgroundColor;
+            canvCont.fillRect(editedxPos,editedyPos,widthToDraw,heightToDraw);
+            canvCont.stroke();
+            // always redraw the border
+            canvCont.beginPath();
+            // todo maybe add as color depending on the current Element
+            canvCont.strokeStyle = gameColors.strokeColor;
+            canvCont.rect(curxPos,curyPos,squareSize,squareSize);
+            canvCont.stroke();
             canvCont.drawImage(appleImage,curxPos,curyPos,squareSize,squareSize);
             continue;
         }
@@ -588,10 +594,20 @@ function checkCollisions(snakeField,snakes){
     // für entfernen aus dem Spiel, leere den Schwanz der Schlange
 
     // find every piece colliding -> the head piece thats on a not empty field that is not an apple
-    let collidedSnakes = snakes.filter((curVal) => (!(snakeField[curVal.xHeadPosition + curVal.yHeadPosition * xFields].getContent() === "empty") && 
+    // add self collided Snakes    
+
+    let collidedSnakes =snakes.filter((curVal) => (!(snakeField[curVal.xHeadPosition + curVal.yHeadPosition * xFields].getContent() === "empty") && 
                                                     !(snakeField[curVal.xHeadPosition + curVal.yHeadPosition * xFields].getContent() === "apple"))); // filter gibt elemete wieder die die Aussage erfüllen
     // findet alle felder die auf denen sich die Köpfe von Schlangen befinden, aber die nicht leer sind
     // für mehrere Schlangen muss
+    // for self collisions remove the whole snake
+    // check for self collision -> check if the snakes Head Position is in the list snaketail
+    let collidedSnakesInfo = collidedSnakes.map((collidedSnake) => 
+                                    collidedSnake.getSnakeTail().filter(
+                                                    (snakePiece) => 
+                                                        snakePiece.getX() == collidedSnake.xHeadPosition && snakePiece.getY() == collidedSnake.yHeadPosition).length > 0 ? 
+                                                            [collidedSnake,"self"] : [collidedSnake,""]);
+    // console.log(collidedSnakesInfo);
     // snakes.forEach((curVal) => (console.log(snakeField[curVal.xHeadPosition + curVal.yHeadPosition * xFields].getContent()))); // filter gibt elemete wieder die die Aussage erfüllen
     if (collidedSnakes.length > 0){
         console.log(collidedSnakes.length + " lost");
@@ -742,21 +758,20 @@ function run(){
     last = now;
     if (fps > 0) { 
         fpsThreshold += dt;
-        if (fpsThreshold < 1.0 / fps) { // if under the over the fps threshhold abort
+        if (fpsThreshold < 1.0 / fps) { // if under the fps threshold abort
             return;
         }
         fpsThreshold -= 1.0 / fps;
         if ((elapsedTime) > fixedTimeStep){
             elapsedTime = 0;
             let headPositions = snakeArray.map((snake) => snake.moveforward());
-            // let headPosition = mySnake.moveforward();
-            //if (headPosition != null){
             for (let i = 0; i < headPositions.length; i++){
                 checkCollisions(snakeField,snakeArray);
                 if (headPositions[i] != null){
                     if(snakeField[headPositions[i].getX() + headPositions[i].getY() * xFields].getContent() === "apple"){
                         snakeField[headPositions[i].getX() + headPositions[i].getY() * xFields].setContent("empty");
                         snakeArray[i].increaseSnakeSize();
+                        spawnApple();
                     }
                 }
             }
@@ -850,6 +865,7 @@ function loadSnakeCookie(){
         for (let newSnake of resultSnakes){
             addSnake(newSnake);
             animateFields(newSnake.updateFields,interpolateField,animationStep,false);
+            mySnake = newSnake;
         }
     }
 }
@@ -890,18 +906,16 @@ let last = performance.now() / 1000;
 let elapsedTime = 0;
 
 const fixedTimeStep = 800 * 0.001; // half a second for a Time Step of the Snake/ the forward moving
-const animationStep = 0.02; // if this is too small the game cant keep up with the fps // TODO make fps dependend on the animationStep? what if the fps wouldnt get met
+const animationStep = 0.05; // if this is too small the game cant keep up with the fps // TODO make fps dependend on the animationStep? what if the fps wouldnt get met
 const currentInterpolation = linearInterpolation;
 
-
+// initalize all basics
 let snakeField = []; // stores the Field where the snake can move
 let currentAnimatedFields = [];
 
 let mySnake = new Snake(10, 0, 0, new Facing("up"), [], [] , true);
 // console.log(JSON.stringify(mySnake));
 let snakeArray = [mySnake]; // stores the snakes on the field
-
-
 for (let i = 0; i < xFields; i++){
     for (let j = 0; j < yFields; j++){
         snakeField[i + j * xFields] =  new Field(i, j, "empty",null);//emptyField;
@@ -909,10 +923,40 @@ for (let i = 0; i < xFields; i++){
 }
 
 
+function setUpSnakeField(){
+    snakeField = []; // stores the Field where the snake can move
+    currentAnimatedFields = [];
+
+    mySnake = new Snake(10, 0, 0, new Facing("up"), [], [] , true);
+    // console.log(JSON.stringify(mySnake));
+    snakeArray = [mySnake]; // stores the snakes on the field
+
+    for (let i = 0; i < xFields; i++){
+        for (let j = 0; j < yFields; j++){
+            snakeField[i + j * xFields] =  new Field(i, j, "empty",null);//emptyField;
+        }
+    }
+}
+
+setUpSnakeField();
 drawCanvas();
 snakeField = updateSnake(snakeField,mySnake);
+spawnApple();
 animateFields(currentAnimatedFields,interpolateField, 1, false);
 
+document.addEventListener('keydown', function(event) {
+    if(event.key == "r") {
+        setUpSnakeField()
+        drawCanvas();
+        spawnApple();
+    }
+    else if(event.key == "a") {
+        mySnake.turnLeft();
+    }
+    else if(event.key == "d"){
+        mySnake.turnRight();
+    }
+});
 
 window.onresize = function(){
     calcSquareSizeDependingOnCanvas(canvas);
@@ -925,6 +969,8 @@ window.onload = function() {
     calcSquareSizeDependingOnCanvas(canvas);
     drawCanvas();
     };  
+
+
 
 // Program Idee 
 // erstelle ein Feld auf dem die Schlange sich befinden kann
@@ -939,7 +985,3 @@ window.onload = function() {
 // Tiefensuche für späteres automatisches bewegen zum Mauscursor?
 // Animation des vorwärtsbewegens -> animations Kette 
 // anhalten der Schlange mit Knopf
-
-// kleinere Probleme der Apfel wird nur einmal gezeichnet
-
-// Ideen für nächstes Projekt, Animierer dem einfach alle zu animierenden Objekte übergeben werden können + game Regel behandler
