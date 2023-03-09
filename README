@@ -1,0 +1,8 @@
+A little and simple javascript snake game
+
+The play field and snakes are abstracted as objects.
+Cookies, which store the snake of the game, are stored in the browser.
+
+
+For running this:
+Clone the project and open the index.html file in a browser. Tested with Mozilla Firefox.
