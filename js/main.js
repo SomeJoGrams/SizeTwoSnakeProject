@@ -971,6 +971,9 @@ document.addEventListener('keydown', function(event) {
     else if(event.key == "d"){
         mySnake.turnRight();
     }
+    else if(event.key == " "){
+        pauseToggle()
+    }
 });
 
 window.onresize = function(){
