@@ -627,10 +627,25 @@ function spawnApple(xPosition, yPosition){
             appleyPosition = Math.round(Math.random() * (yFields - 1));
         }
         if (freeFields > 0){
-            snakeField[applexPosition + appleyPosition * xFields].setContent("apple");
+            if (snakeField[applexPosition + appleyPosition * xFields].isFree()){ // only draw
+                snakeField[applexPosition + appleyPosition * xFields].setContent("apple");
+                let field = new Field(applexPosition, appleyPosition, "apple", null);
+                currentAnimatedFields.push(new DrawnField(field,1));
+            }
+            else{// find the next free field
+                for (let i = 0; i < xFields; i++){
+                    for (let j = 0; j < yFields; j++){
+                        if (snakeField[i + j  * xFields].isFree()){ // only draw
+                            snakeField[i + j * xFields].setContent("apple");
+                            let field = new Field(i, j, "apple", null);
+                            currentAnimatedFields.push(new DrawnField(field,1));
+                            return;
+                        }
+                    }
+                }   
+            }
         }
-        let field = new Field(applexPosition, appleyPosition, "apple", null);
-        currentAnimatedFields.push(new DrawnField(field,1));
+        
     }
 }
 
@@ -906,7 +921,7 @@ let last = performance.now() / 1000;
 let elapsedTime = 0;
 
 const fixedTimeStep = 800 * 0.001; // half a second for a Time Step of the Snake/ the forward moving
-const animationStep = 0.05; // if this is too small the game cant keep up with the fps // TODO make fps dependend on the animationStep? what if the fps wouldnt get met
+const animationStep = 0.02; // if this is too small the game cant keep up with the fps // TODO make fps dependend on the animationStep? what if the fps wouldnt get met
 const currentInterpolation = linearInterpolation;
 
 // initalize all basics
